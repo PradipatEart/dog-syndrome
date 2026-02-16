@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028041078303",
+    "project_id": "dog-syndrome",
+    "storage_bucket": "dog-syndrome.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028041078303:android:eb0d5e4a3d277b5ff6872a",
+        "android_client_info": {
+          "package_name": "com.example.dog_syndrome"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrA__RXyszeqY1SSLVUrAhzARqDIoGa8U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
