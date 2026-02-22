@@ -53,19 +53,31 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFD47E30),
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: "Leaderboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Setting"),
-        ],
-        showUnselectedLabels: false,
-        ),
+      bottomNavigationBar: ClipRRect(
+          borderRadius: BorderRadiusGeometry.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+          child: BottomNavigationBar(
+          backgroundColor: Color(0xFFFDFBD4),
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(_selectedIndex == 0 ? Icons.home : Icons.home_outlined,), label: "Home"),
+            BottomNavigationBarItem(
+              icon: Icon(_selectedIndex == 1 ? Icons.leaderboard : Icons.leaderboard_outlined), label: "Leaderboard"),
+            BottomNavigationBarItem(
+              icon: Icon(_selectedIndex == 2 ? Icons.person : Icons.person_outline), label: "Account"),
+            BottomNavigationBarItem(
+              icon: Icon(_selectedIndex == 3 ? Icons.settings : Icons.settings_outlined), label: "Setting"),
+          ],
+          showUnselectedLabels: false,
+          selectedItemColor: Color(0xFFD47E30),
+          unselectedItemColor: Color(0xFF825E34),
+          elevation: 0,
+          ),
+        )
     );
   }
 }
