@@ -5,6 +5,7 @@ import 'package:dog_syndrome/leaderboard.dart';
 import 'package:dog_syndrome/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -26,6 +27,34 @@ class MyApp extends StatelessWidget {
         '/home' : (context) => MainNavigation(),
       },
 
+      theme: ThemeData(
+        textTheme: GoogleFonts.kanitTextTheme(),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+          floatingLabelStyle: TextStyle(color: Color(0xFFD47E30)),
+          labelStyle: TextStyle(color: Colors.grey),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Color(0xFFD47E30), width: 2.0),),
+        ),
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Colors.black,
+          selectionColor: Colors.orange.withOpacity(0.3),
+          selectionHandleColor: Colors.orange,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD47E30),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          )
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Color(0xFF825E34)
+            
+          )
+        ),
+      ),
     );
   }
 }

@@ -33,7 +33,14 @@ class UserFirestoreService {
         'lastCheckIn' : Timestamp.now(),
         'updatedAt' : Timestamp.now()
       });
+  }
 
-    }
+  Future<void> updateProfile(String uid, String newDisplayName, String newPhotoURL) {
+  return user.doc(uid).update({
+    'displayName': newDisplayName,
+    'photoURL' : newPhotoURL,
+    'updatedAt': Timestamp.now(),
+  });
+}
 
 }
