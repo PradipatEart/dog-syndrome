@@ -515,7 +515,18 @@ class _AuthenPageState extends State<AuthenPage> {
                 _pickImage(ImageSource.camera);
                 Navigator.pop(context);
               },
-            )
+            ),
+            if(_profileImage != null)
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: Text("Remove Photo"),
+              onTap: () {
+                setState(() {
+                  _profileImage = null;
+                });
+                Navigator.pop(context);
+              },
+            ),
           ],
         ),)
       )

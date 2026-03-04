@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
                   return Text("Something went wrong!");
                 }
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return Column();
                 }
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
@@ -38,7 +38,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 30,),
                       yourStreak(userData['currentStreak']),
                       const SizedBox(height: 20,),
-                      yourPet(),
+                      yourPet(context),
                       const SizedBox(height: 20,),
                     ]
                   );
@@ -103,23 +103,28 @@ Widget yourStreak(int currentStreak){
   );
 }
 
-Widget yourPet(){
-  return Expanded(
-    child: Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text("Your Pet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF825E34))),
-            const SizedBox(height: 30),
-            Image.asset('assets/images/cute.gif'),
-          ],
-        )
-    ));
+Widget yourPet(BuildContext context){
+  return GestureDetector(
+    onTap: () {
+      Navigator.pushReplacementNamed(context, '/yourpet');
+    },
+    child: Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Text("Your Pet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF825E34))),
+              const SizedBox(height: 30),
+              Image.asset('assets/images/cute.gif'),
+            ],
+          )
+      )),
+  );
 }

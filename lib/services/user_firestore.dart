@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 
 class UserFirestoreService {
 
@@ -36,11 +37,33 @@ class UserFirestoreService {
   }
 
   Future<void> updateProfile(String uid, String newDisplayName, String newPhotoURL) {
-  return user.doc(uid).update({
-    'displayName': newDisplayName,
-    'photoURL' : newPhotoURL,
-    'updatedAt': Timestamp.now(),
-  });
-}
+    return user.doc(uid).update({
+      'displayName': newDisplayName,
+      'photoURL' : newPhotoURL,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  Future<void> updateDisplayName(String uid, String newDisplayName) {
+    return user.doc(uid).update({
+      'displayName': newDisplayName,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  Future<void> updatePhoto(String uid, String newPhotoURL) {
+    return user.doc(uid).update({
+      'photoURL' : newPhotoURL,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  Future<void> deleteUser(String uid) async {
+    try {
+      await user.doc(uid).delete();
+    } catch (e) {
+      debugPrint("Error deleting Firestore data: $e");
+    }
+  }
 
 }
