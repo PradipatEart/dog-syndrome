@@ -36,7 +36,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 70,),
                       userProfile(userData['photoURL'], userData['displayName']),
                       const SizedBox(height: 30,),
-                      yourStreak(userData['currentStreak']),
+                      yourStreak(context,userData),
                       const SizedBox(height: 20,),
                       yourPet(context),
                       const SizedBox(height: 20,),
@@ -86,19 +86,24 @@ Widget userProfile(String photoURL, String displayName){
         );
 }
 
-Widget yourStreak(int currentStreak){
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 20),
-    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(20),
-      color: Colors.white),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Image.asset('assets/images/streak.png', width: 100,),
-        Text(currentStreak.toString(), style: TextStyle(fontSize: 80, fontWeight: FontWeight.bold, color: Colors.red),),
-      ],
+Widget yourStreak(BuildContext context, Map<String, dynamic> userData){
+  return GestureDetector(
+    onTap: () {
+      Navigator.pushNamed(context, '/streak');
+    },
+    child: Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Image.asset('assets/images/streak.png', width: 100,),
+          Text(userData['currentStreak'].toString(), style: TextStyle(fontSize: 80, fontWeight: FontWeight.bold, color: Colors.red),),
+        ],
+      ),
     ),
   );
 }
