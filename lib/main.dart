@@ -3,6 +3,7 @@ import 'package:dog_syndrome/authen.dart';
 import 'package:dog_syndrome/home.dart';
 import 'package:dog_syndrome/leaderboard.dart';
 import 'package:dog_syndrome/setting.dart';
+import 'package:dog_syndrome/workout.dart';
 import 'package:dog_syndrome/yourpet.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
         '/authen' : (context) => AuthenPage(),
         '/home' : (context) => MainNavigation(),
         '/yourpet' : (context) => YourPetPage(),
+        '/workout' : (context) => WorkoutPage(),
       },
 
       theme: ThemeData(

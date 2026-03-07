@@ -82,7 +82,7 @@ class _AuthenPageState extends State<AuthenPage> {
       if(userCredential.user != null){
         await userFirestoreService.addUser(
           userCredential.user!.uid,
-          userCredential.user!.uid, "", 0, 0);
+          userCredential.user!.uid, "");
         
         _changePage(3);
       }
@@ -135,7 +135,7 @@ class _AuthenPageState extends State<AuthenPage> {
         }else{
           await userFirestoreService.addUser(
           userCredential.user!.uid,
-          userCredential.user!.uid, "", 0, 0);
+          userCredential.user!.uid, "");
           _changePage(3);
         }
       }
@@ -249,7 +249,7 @@ class _AuthenPageState extends State<AuthenPage> {
             Container(
               color: Colors.black.withOpacity(0.3),
               child: Center(
-                child: Image.asset('assets/images/dog_loading.gif', width: 200,),
+                child: Image.asset('assets/gif/general/dog_loading.gif', width: 200,),
               ),
             )
         ],

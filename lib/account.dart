@@ -73,33 +73,33 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> _deleteAccount() async {
-  try {
-    User? user = FirebaseAuth.instance.currentUser;
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      setState(() => _isLoading = true);
-      Navigator.pushReplacementNamed(context, '/authen');
-      await userFirestoreService.deleteUser(user.uid);
-      await user.delete();
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Your account has been deleted.", style: TextStyle(color: Colors.black),), backgroundColor: Colors.lightGreenAccent,)
-      );
+      if (user != null) {
+        setState(() => _isLoading = true);
+        await userFirestoreService.deleteUser(user.uid);
+        await user.delete();
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Your account has been deleted.", style: TextStyle(color: Colors.black),), backgroundColor: Colors.lightGreenAccent,)
+        );
+        Navigator.pushReplacementNamed(context, '/authen');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please sign out and try again.", style: TextStyle(color: Colors.black),), backgroundColor: Colors.yellow,)
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Something went wrong.",), backgroundColor: Colors.red,)
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'requires-recent-login') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please sign out and try again.", style: TextStyle(color: Colors.black),), backgroundColor: Colors.yellow,)
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Something went wrong.",), backgroundColor: Colors.red,)
-      );
-    }
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
-  }
   }
 
   Future<void> _resetPassword() async{
@@ -129,40 +129,46 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFD47E30),
-      body: Center(
-        child: Stack(
-          children: [
-            Image.asset('assets/images/background_fade.png'),
-            StreamBuilder<DocumentSnapshot>(
-              stream: userFirestoreService.getUserStream(uid!),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Text("Something went wrong!");
-                }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Column();
-                }
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Stack(
+              children: [
+                Image.asset('assets/images/background_fade.png'),
+                StreamBuilder<DocumentSnapshot>(
+                  stream: userFirestoreService.getUserStream(uid!),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text("Something went wrong!");
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Column();
+                    }
 
-                var userData = snapshot.data!.data() as Map<String, dynamic>;
+                    var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-                return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 70,),
-                      userProfile(userData['photoURL'], userData['displayName'], FirebaseAuth.instance.currentUser?.email),
-                      
-                    ]
-                  );
-              },
+                    return Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 70,),
+                          userProfile(userData['photoURL'], userData['displayName'], FirebaseAuth.instance.currentUser?.email),
+                          
+                        ]
+                      );
+                  },
+                ),
+                
+              ],
             ),
-            if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: const Center(child: CircularProgressIndicator(color: Colors.orange)),
-            ),
-          ],
-        )
-        )
+          ),
+          if (_isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            child: const Center(child: CircularProgressIndicator(color: Colors.orange)),
+          ),
+        ],
+      )
+        
     );
   }
 
@@ -230,11 +236,11 @@ class _AccountPageState extends State<AccountPage> {
         const SizedBox(height: 20),
         _buildActionButton(label: 'Save', color: Colors.green, onPressed: _updateProfile),
         const SizedBox(height: 30),
-        _buildActionButton(label: 'Reset Password', color: Colors.black, onPressed: _resetPassword),
+        _buildActionButton(label: 'Reset Password', color: Colors.black, onPressed: () => _showResetPasswordDialog(context)),
         const SizedBox(height: 10),
         _buildActionButton(label: 'Sign Out', color: Colors.red, onPressed: _signOut),
-        const SizedBox(height: 10),
-        _buildActionButton(label: 'Delete Account', color: Colors.red, onPressed: () => _showDeleteDialog(context)),
+        //const SizedBox(height: 10),
+        //_buildActionButton(label: 'Delete Account', color: Colors.red, onPressed: () => _showDeleteDialog(context)),
         const SizedBox(height: 20),
       ],
     ),
@@ -321,6 +327,29 @@ class _AccountPageState extends State<AccountPage> {
               _deleteAccount();
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetPasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Sending Recovery Email?"),
+        content: const Text("Send recovery email to your registered email."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetPassword();
+            },
+            child: const Text("Send Email", style: TextStyle(color: Colors.green)),
           ),
         ],
       ),

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dog_syndrome/services/dog_service.dart';
 import 'package:dog_syndrome/services/user_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 UserFirestoreService userFirestoreService = UserFirestoreService();
@@ -38,7 +40,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 30,),
                       yourStreak(userData['currentStreak']),
                       const SizedBox(height: 20,),
-                      yourPet(context),
+                      yourPet(context, userData['todayKm'], userData['dailyGoalKm']),
                       const SizedBox(height: 20,),
                     ]
                   );
@@ -103,28 +105,30 @@ Widget yourStreak(int currentStreak){
   );
 }
 
-Widget yourPet(BuildContext context){
+Widget yourPet(BuildContext context, double todayKm, double dailyGoalKm){
   return GestureDetector(
     onTap: () {
       Navigator.pushReplacementNamed(context, '/yourpet');
     },
-    child: Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Text("Your Pet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF825E34))),
-              const SizedBox(height: 30),
-              Image.asset('assets/images/cute.gif'),
-            ],
-          )
-      )),
+    child: Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Text("Your Pet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF825E34))),
+            const SizedBox(height: 30),
+            SizedBox(
+              height: 200,
+              child: DogService().getDogGIF(todayKm, dailyGoalKm),
+            ),
+          ],
+        )
+    ),
   );
 }
