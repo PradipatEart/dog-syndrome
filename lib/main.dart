@@ -5,6 +5,7 @@ import 'package:dog_syndrome/leaderboard.dart';
 import 'package:dog_syndrome/setting.dart';
 import 'package:dog_syndrome/workout.dart';
 import 'package:dog_syndrome/yourpet.dart';
+import 'package:dog_syndrome/streak.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
         '/home' : (context) => MainNavigation(),
         '/yourpet' : (context) => YourPetPage(),
         '/workout' : (context) => WorkoutPage(),
+        '/streak' : (context) => StreakPage()
       },
 
       theme: ThemeData(
