@@ -36,41 +36,137 @@ class _YourPetPageState extends State<YourPetPage> {
   void _showEditPetNameDialog(String currentName){
     TextEditingController _nameController = TextEditingController(text: currentName);
 
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text("Edit Your Pet Name"),
-      content: TextField(
-        controller: _nameController,
-        autofocus: true,
-        maxLength: 12,
-        decoration: const InputDecoration(
-          hintText: "Enter new name",
-          border: OutlineInputBorder(),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Edit Your Pet Name"),
+        content: TextField(
+          controller: _nameController,
+          autofocus: true,
+          maxLength: 12,
+          decoration: const InputDecoration(
+            hintText: "Enter new name",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _editPetName(_nameController.text);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            child: const Text("Save", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditGoalDialog(double currentGoal) {
+    double _tempGoal = currentGoal.clamp(3.0, 20.0);
+    bool _isUpdating = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("Set New Daily Goal"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Warning: This will reset your progress and streak!",
+                style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
+              Text(
+                "${_tempGoal.toStringAsFixed(1)} Km",
+                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.amber),
+              ),
+              Slider(
+                value: _tempGoal,
+                min: 3.0,
+                max: 20.0,
+                divisions: 34,
+                activeColor: _isUpdating ? Colors.grey : Colors.amber,
+                onChanged: _isUpdating ? null : (value) {
+                  setDialogState(() {
+                    _tempGoal = value;
+                  });
+                },
+              ),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("3 Km", style: TextStyle(color: Colors.grey)),
+                  Text("20 Km", style: TextStyle(color: Colors.grey)),
+                ],
+              )
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isUpdating ? null : () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: (_isUpdating || _tempGoal.toStringAsFixed(1) == currentGoal.toStringAsFixed(1)) 
+                ? null
+                : () async {
+                    setDialogState(() => _isUpdating = true);
+
+                    try {
+                      await userFirestoreService.resetGoalAndProgress(uid!, _tempGoal);
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Goal updated to ${_tempGoal.toStringAsFixed(1)} Km!"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      setDialogState(() => _isUpdating = false);
+                      debugPrint("Error: $e");
+                    }
+                  },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                minimumSize: const Size(100, 45),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: _isUpdating
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text("Confirm Reset", style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            _editPetName(_nameController.text);
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-          child: const Text("Save", style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ),
-  );
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Color(0xFFD47E30),
       body: Center(
         child: Stack(
@@ -84,6 +180,20 @@ class _YourPetPageState extends State<YourPetPage> {
                 }
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Column();
+                }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    await FirebaseAuth.instance.signOut();
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Account not found. Please try again."),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                    Navigator.pushNamedAndRemoveUntil(context, '/authen', (route) => false);
+                  });
+                  return const Center(child: CircularProgressIndicator()); 
                 }
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
@@ -114,12 +224,27 @@ class _YourPetPageState extends State<YourPetPage> {
                                         IconButton(onPressed: () => _showEditPetNameDialog(userData['petName']), icon: Icon(Icons.edit))
                                       ],
                                     ),
-                                    Text("${userData['todayKm'].toStringAsFixed(2)} / ${userData['dailyGoalKm'] ?? 6} Km", 
-                                           style: const TextStyle(fontSize: 20)),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "${userData['todayKm'].toStringAsFixed(2)} / ${userData['dailyGoalKm']} Km",
+                                          style: const TextStyle(fontSize: 20),
+                                        ),
+                                        IconButton(
+                                          onPressed: () => _showEditGoalDialog((userData['dailyGoalKm'] ?? 5.0).toDouble()),
+                                          icon: const Icon(Icons.settings, size: 20, color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                          "${userData['todaySteps'] ?? 0} Step${userData['todaySteps'] == 1 ? '' : 's'}",
+                                          style: const TextStyle(fontSize: 15, color: Colors.grey),
+                                        ),
                                     SizedBox(height: 80,),
                                     SizedBox(
-                                      height: 300,
-                                      child: DogService().getDogGIF(userData['todayKm'], userData['dailyGoalKm']),
+                                      height: 250,
+                                      child: DogService().getDogGIF((userData['isGoalReachedToday'] ?? false)),
                                     ),
                                     SizedBox(height: 80,),
                                     SizedBox(

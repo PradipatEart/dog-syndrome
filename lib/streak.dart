@@ -35,6 +35,20 @@ class StreakPage extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Column();
                 }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    await FirebaseAuth.instance.signOut();
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Account not found. Please try again."),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                    Navigator.pushNamedAndRemoveUntil(context, '/authen', (route) => false);
+                  });
+                  return const Center(child: CircularProgressIndicator()); 
+                }
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
 

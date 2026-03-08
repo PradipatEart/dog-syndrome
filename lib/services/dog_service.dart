@@ -7,8 +7,8 @@ class DogService {
 
   UserFirestoreService userFirestoreService = UserFirestoreService();
 
-  Widget getDogGIF(double todayKm, double dailyGoalKm) {
-    if (todayKm >= dailyGoalKm) {
+  Widget getDogGIF(bool isGoalReached) {
+    if (isGoalReached) {
       int randomPos = Random().nextInt(4) + 1; 
       return Image.asset('assets/gif/dog/dog_idle$randomPos.gif', fit: BoxFit.contain,);
     } else {

@@ -7,9 +7,10 @@ class UserFirestoreService {
   final CollectionReference user = FirebaseFirestore.instance.collection('user');
 
   Stream<QuerySnapshot> getAllUserStream() {
-    final userStream = user.orderBy('name', descending: true).snapshots();
-    
-    return userStream;
+    return user
+        .where('role', isEqualTo: 'User')
+        .orderBy('displayName', descending: false)
+        .snapshots();
   }
 
   Stream<DocumentSnapshot> getDailyStatsStream(String uid) {
@@ -25,8 +26,10 @@ class UserFirestoreService {
     return user.doc(uid).snapshots();
   }
 
-  Future<void> addUser(String uid, String displayName, String photoURL) {
+  Future<void> addUser(String uid, String email, String displayName, String photoURL) {
     return user.doc(uid).set({
+      'email': email,
+      'role': 'User',
       'displayName': displayName,
       'photoURL': photoURL,
       'petName': 'My Dog',
@@ -34,15 +37,18 @@ class UserFirestoreService {
       'highestStreak': 0,
       'dailyGoalKm': 5.0,
       'todayKm': 0.0,
-      'lastCheckIn': Timestamp.now(),
-      'updatedAt': Timestamp.now()
+      'todaySteps' : 0,
+      'isGoalReachedToday': false,
+      'reachedGoalAt': null,
+      'lastDailyReset': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<void> updateDailyGoal(String uid, double newGoal) {
     return user.doc(uid).update({
       'dailyGoalKm': newGoal,
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -50,30 +56,30 @@ class UserFirestoreService {
     return user.doc(uid).update({
       'displayName': newDisplayName,
       'photoURL' : newPhotoURL,
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<void> updateDisplayName(String uid, String newDisplayName) {
     return user.doc(uid).update({
       'displayName': newDisplayName,
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<void> updatePhoto(String uid, String newPhotoURL) {
     return user.doc(uid).update({
       'photoURL' : newPhotoURL,
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<void> updatePetName(String uid, String newPetName) {
-  return user.doc(uid).update({
-    'petName': newPetName,
-    'updatedAt': Timestamp.now(),
-  });
-}
+    return user.doc(uid).update({
+      'petName': newPetName,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });  
+  }
 
   Future<void> deleteUser(String uid) async {
     try {
@@ -83,20 +89,83 @@ class UserFirestoreService {
     }
   }
 
-  Future<void> saveWorkoutData(String uid, int steps, double distanceKm) async {
-    String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  Future<void> saveWorkoutData({
+    required String uid, 
+    required int steps, 
+    required double totalDist,
+    required int streak,
+    required int highest,
+    required bool isFirstTimeReached,
+  }) async {
+    String todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    await user.doc(uid).update({
-      'todayKm': distanceKm,
-      'updatedAt': Timestamp.now(),
-    });
-
-    await user.doc(uid).collection('dailyStats').doc(today).set({
-      'steps': steps,
-      'distanceKm': distanceKm,
-      'date': today,
+    Map<String, dynamic> updateData = {
+      'todayKm': totalDist,
+      'todaySteps': steps,
+      'currentStreak': streak,
+      'highestStreak': highest,
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    };
+
+    if (isFirstTimeReached) {
+      updateData['isGoalReachedToday'] = true;
+      updateData['reachedGoalAt'] = FieldValue.serverTimestamp(); 
+    }
+
+    Map<String, dynamic> dailyStatData = {
+      'date': todayStr,
+      'distance': totalDist,
+      'steps': steps,
+      'isGoalReached': updateData['isGoalReachedToday'] ?? false,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    DocumentReference userRef = user.doc(uid);
+    batch.update(userRef, updateData);
+    
+    DocumentReference dailyStatRef = userRef.collection('dailyStats').doc(todayStr);
+    batch.set(dailyStatRef, dailyStatData, SetOptions(merge: true));
+
+    await batch.commit();
+  }
+
+  Future<void> resetGoalAndProgress(String uid, double newGoal) {
+    return user.doc(uid).update({
+      'dailyGoalKm': newGoal,
+      'currentStreak': 0,
+      'todayKm': 0.0,
+      'todaySteps': 0,
+      'isGoalReachedToday': false,
+      'reachedGoalAt': null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> checkAndResetDailyData(String uid, Map<String, dynamic> userData) async {
+    String todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    String lastResetStr = userData['lastDailyReset'] ?? "";
+
+    if (lastResetStr != todayStr) {
+      int currentStreak = userData['currentStreak'] ?? 0;
+      double todayKm = (userData['todayKm'] ?? 0.0).toDouble();
+      double goalKm = (userData['dailyGoalKm'] ?? 0.0).toDouble();
+
+      if (todayKm < goalKm) {
+        currentStreak = 0;
+      }
+
+      await user.doc(uid).update({
+        'todayKm': 0.0,
+        'todaySteps': 0,
+        'isGoalReachedToday': false,
+        'reachedGoalAt': null,
+        'currentStreak': currentStreak,
+        'lastDailyReset': todayStr,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
 }

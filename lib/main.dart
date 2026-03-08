@@ -1,4 +1,5 @@
 import 'package:dog_syndrome/account.dart';
+import 'package:dog_syndrome/admin.dart';
 import 'package:dog_syndrome/authen.dart';
 import 'package:dog_syndrome/home.dart';
 import 'package:dog_syndrome/leaderboard.dart';
@@ -30,7 +31,8 @@ class MyApp extends StatelessWidget {
         '/home' : (context) => MainNavigation(),
         '/yourpet' : (context) => YourPetPage(),
         '/workout' : (context) => WorkoutPage(),
-        '/streak' : (context) => StreakPage()
+        '/streak' : (context) => StreakPage(),
+        '/admin' : (context) => AdminPage()
       },
 
       theme: ThemeData(

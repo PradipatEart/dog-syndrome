@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dog_syndrome/admin.dart';
 import 'package:dog_syndrome/services/dog_service.dart';
 import 'package:dog_syndrome/services/user_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,8 +30,26 @@ class HomePage extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Column();
                 }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    await FirebaseAuth.instance.signOut();
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Account not found. Please try again."),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                    Navigator.pushNamedAndRemoveUntil(context, '/authen', (route) => false);
+                  });
+                  return const Center(child: CircularProgressIndicator()); 
+                }
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
+                userFirestoreService.checkAndResetDailyData(uid!, userData);
+                if(userData['role'] == 'Admin'){
+                  return AdminPage();
+                }
 
                 return Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -40,7 +59,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 30,),
                       yourStreak(context,userData),
                       const SizedBox(height: 20,),
-                      yourPet(context, userData['todayKm'], userData['dailyGoalKm']),
+                      yourPet(context, (userData['isGoalReachedToday'] ?? false)),
                       const SizedBox(height: 20,),
                     ]
                   );
@@ -89,6 +108,10 @@ Widget userProfile(String photoURL, String displayName){
 }
 
 Widget yourStreak(BuildContext context, Map<String, dynamic> userData){
+  double todayKm = (userData['todayKm'] ?? 0.0).toDouble();
+  double dailyGoalKm = (userData['dailyGoalKm'] ?? 0.0).toDouble();
+  bool isTodayStreak = (todayKm >= dailyGoalKm);
+
   return GestureDetector(
     onTap: () {
       Navigator.pushNamed(context, '/streak');
@@ -102,15 +125,15 @@ Widget yourStreak(BuildContext context, Map<String, dynamic> userData){
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset('assets/images/streak.png', width: 100,),
-          Text(userData['currentStreak'].toString(), style: TextStyle(fontSize: 80, fontWeight: FontWeight.bold, color: Colors.red),),
+          Image.asset('assets/images/${isTodayStreak ? '' : 'no_'}streak.png', width: 100,),
+          Text(userData['currentStreak'].toString(), style: TextStyle(fontSize: 80, fontWeight: FontWeight.bold, color: (isTodayStreak ? Colors.red : Colors.grey)),),
         ],
       ),
     ),
   );
 }
 
-Widget yourPet(BuildContext context, double todayKm, double dailyGoalKm){
+Widget yourPet(BuildContext context, bool isGoalReached){
   return GestureDetector(
     onTap: () {
       Navigator.pushReplacementNamed(context, '/yourpet');
@@ -130,7 +153,7 @@ Widget yourPet(BuildContext context, double todayKm, double dailyGoalKm){
             const SizedBox(height: 30),
             SizedBox(
               height: 200,
-              child: DogService().getDogGIF(todayKm, dailyGoalKm),
+              child: DogService().getDogGIF(isGoalReached),
             ),
           ],
         )

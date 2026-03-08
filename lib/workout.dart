@@ -6,6 +6,7 @@ import 'package:dog_syndrome/services/dog_service.dart';
 import 'package:dog_syndrome/services/pedometer_service.dart';
 import 'package:dog_syndrome/services/user_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 UserFirestoreService userFirestoreService = UserFirestoreService();
@@ -27,6 +28,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   StreamSubscription? _statusSubscription;
   String _currentStatus = 'stopped';
 
+  double? _initialTodayKm;
   int _steps = 0;
   double _distanceFromSteps = 0.0;
   Timer? _timer;
@@ -111,13 +113,30 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
     try {
       double todayKm = (userData['todayKm'] ?? 0.0).toDouble();
+      double goalKm = (userData['dailyGoalKm'] ?? 0.0).toDouble();
+      int todaySteps = userData['todaySteps'] ?? 0;
       double totalDistToSave = todayKm + _distanceFromSteps;
-      int stepsToSave = _steps;
+      int stepsToSave = todaySteps + _steps;
+
+      int currentStreak = userData['currentStreak'] ?? 0;
+      int highestStreak = userData['highestStreak'] ?? 0;
+  
+
+      bool isFirstTimeReached = (todayKm < goalKm && totalDistToSave >= goalKm);
+      if (isFirstTimeReached) {
+        currentStreak += 1;
+        if (currentStreak > highestStreak) {
+          highestStreak = currentStreak;
+        }
+      }
 
       await userFirestoreService.saveWorkoutData(
-        uid!, 
-        stepsToSave, 
-        totalDistToSave
+        uid: uid!,
+        steps: stepsToSave,
+        totalDist: totalDistToSave,
+        streak: currentStreak,
+        highest: highestStreak,
+        isFirstTimeReached: isFirstTimeReached,
       );
 
       _pedometerService.reset();
@@ -160,14 +179,27 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox();
                 }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    await FirebaseAuth.instance.signOut();
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Account not found. Please try again."),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                    Navigator.pushNamedAndRemoveUntil(context, '/authen', (route) => false);
+                  });
+                  return const Center(child: CircularProgressIndicator()); 
+                }
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-                double todayKm = (userData['todayKm'] ?? 0.0).toDouble();
+                _initialTodayKm ??= (userData['todayKm'] ?? 0.0).toDouble();
                 double goalKm = (userData['dailyGoalKm'] ?? 1.0).toDouble();
 
-                double currentSessionDist = _isSaving ? 0.0 : _distanceFromSteps;
-                double totalDist = todayKm + currentSessionDist; 
+                double totalDist = _initialTodayKm! + _distanceFromSteps; 
                 double progress = totalDist / goalKm;
 
                 if (progress > 1.0) progress = 1.0;
@@ -209,14 +241,14 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text("Distance", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-                                      Text("${totalDist.toStringAsFixed(2)} / ${userData['dailyGoalKm'] ?? 6} Km", 
+                                      Text("${totalDist.toStringAsFixed(2)} / ${userData['dailyGoalKm'] ?? 0} Km", 
                                            style: const TextStyle(fontSize: 25)),
                                     ],
                                   ),
                                   
                                   SizedBox(height: 40,),
                                   SizedBox(
-                                    height: 300,
+                                    height: 250,
                                     child: _buildDogGIF(),
                                   ),
                                   SizedBox(height: 10,),
@@ -281,6 +313,17 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                     ],
                                   ),
                                   const SizedBox(height: 20),
+                                  if (kDebugMode)
+                                    FloatingActionButton(
+                                      backgroundColor: Colors.red, // สีแดงให้รู้ว่าปุ่มเทส
+                                      onPressed: () {
+                                        setState(() {
+                                          _steps += 200; 
+                                          _distanceFromSteps = _steps * 0.000762;
+                                        });
+                                      },
+                                      child: Icon(Icons.assist_walker),
+                                    )
                                 ],
                               ),
                             ),

@@ -82,6 +82,7 @@ class _AuthenPageState extends State<AuthenPage> {
       if(userCredential.user != null){
         await userFirestoreService.addUser(
           userCredential.user!.uid,
+          email,
           userCredential.user!.uid, "");
         
         _changePage(3);
@@ -135,6 +136,7 @@ class _AuthenPageState extends State<AuthenPage> {
         }else{
           await userFirestoreService.addUser(
           userCredential.user!.uid,
+          email,
           userCredential.user!.uid, "");
           _changePage(3);
         }

@@ -1,22 +1,31 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PedometerService {
-  Stream<StepCount>? _stepCountStream;
   int _initialSteps = -1;
 
   Future<bool> checkPermission() async {
-    if (Platform.isAndroid) {
-      var status = await Permission.activityRecognition.request();
-      return status.isGranted;
+    try {
+      if (Platform.isAndroid) {
+        var status = await Permission.activityRecognition.request();
+        return status.isGranted;
+      } else if (Platform.isIOS) {
+        var status = await Permission.sensors.request();
+        return status.isGranted;
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Permission Error: $e");
+      return false;
     }
-    return false;
   }
 
   Stream<Map<String, dynamic>> getStepStream() {
     return Pedometer.stepCountStream.map((event) {
+
       if (_initialSteps == -1) {
         _initialSteps = event.steps;
       }

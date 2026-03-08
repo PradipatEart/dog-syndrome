@@ -144,6 +144,20 @@ class _AccountPageState extends State<AccountPage> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Column();
                     }
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) async {
+                        await FirebaseAuth.instance.signOut();
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Account not found. Please try again."),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                        Navigator.pushNamedAndRemoveUntil(context, '/authen', (route) => false);
+                      });
+                      return const Center(child: CircularProgressIndicator()); 
+                    }
 
                     var userData = snapshot.data!.data() as Map<String, dynamic>;
 
@@ -151,7 +165,7 @@ class _AccountPageState extends State<AccountPage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           const SizedBox(height: 70,),
-                          userProfile(userData['photoURL'], userData['displayName'], FirebaseAuth.instance.currentUser?.email),
+                          userProfile(userData['photoURL'], userData['displayName'], userData['email']),
                           
                         ]
                       );
