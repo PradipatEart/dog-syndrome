@@ -146,6 +146,15 @@ class _AccountPageState extends State<AccountPage> {
                     }
                     if (!snapshot.hasData || !snapshot.data!.exists) {
                       WidgetsBinding.instance.addPostFrameCallback((_) async {
+                        final user = FirebaseAuth.instance.currentUser;
+        
+                        try {
+                          await user?.delete();
+                          debugPrint("Auth Account Deleted Successfully");
+                        } catch (e) {
+                          debugPrint("Auth Deletion failed: $e");
+                        }
+
                         await FirebaseAuth.instance.signOut();
                         
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -158,7 +167,6 @@ class _AccountPageState extends State<AccountPage> {
                       });
                       return const Center(child: CircularProgressIndicator()); 
                     }
-
                     var userData = snapshot.data!.data() as Map<String, dynamic>;
 
                     return Column(
