@@ -72,36 +72,6 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
-  Future<void> _deleteAccount() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        setState(() => _isLoading = true);
-        await userFirestoreService.deleteUser(user.uid);
-        await user.delete();
-        if (!mounted) return;
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Your account has been deleted.", style: TextStyle(color: Colors.black),), backgroundColor: Colors.lightGreenAccent,)
-        );
-        Navigator.pushReplacementNamed(context, '/authen');
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please sign out and try again.", style: TextStyle(color: Colors.black),), backgroundColor: Colors.yellow,)
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Something went wrong.",), backgroundColor: Colors.red,)
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _resetPassword() async{
     String email = FirebaseAuth.instance.currentUser!.email!.trim();
     try{
@@ -329,30 +299,6 @@ class _AccountPageState extends State<AccountPage> {
         _previewImage = pickedFile;
       });
     }
-  }
-  
-
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Confirm Deleting Account?"),
-        content: const Text("All your data will be lost and cannot be recover."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteAccount();
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showResetPasswordDialog(BuildContext context) {

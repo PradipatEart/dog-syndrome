@@ -3,7 +3,6 @@ import 'package:dog_syndrome/admin.dart';
 import 'package:dog_syndrome/services/dog_service.dart';
 import 'package:dog_syndrome/services/user_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 UserFirestoreService userFirestoreService = UserFirestoreService();
@@ -11,7 +10,7 @@ UserFirestoreService userFirestoreService = UserFirestoreService();
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
-  String? uid = FirebaseAuth.instance.currentUser?.uid;
+  final String? uid = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   Widget build(BuildContext context) {

@@ -7,8 +7,8 @@ import 'services/StreakCalendar.dart';
 class StreakPage extends StatelessWidget {
   StreakPage({super.key});
 
-  UserFirestoreService userFirestoreService = UserFirestoreService();
-  String? uid = FirebaseAuth.instance.currentUser?.uid;
+  final UserFirestoreService userFirestoreService = UserFirestoreService();
+  final String? uid = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   Widget build(BuildContext context) {
