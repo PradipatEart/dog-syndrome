@@ -9,13 +9,21 @@ import 'package:dog_syndrome/yourpet.dart';
 import 'package:dog_syndrome/streak.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'services/notification_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
+  final notiService = NotificationService();
+  await notiService.initNotification();
+  await notiService.requestAllPermissions();
+  
+  FlutterNativeSplash.remove();
   runApp(const MyApp());
 }
 
@@ -80,6 +88,11 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     HomePage(), LeaderboardPage(), AccountPage(), SettingPage()
   ];
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   void _onItemTapped(int index){
     setState(() {

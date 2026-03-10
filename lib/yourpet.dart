@@ -207,92 +207,85 @@ class _YourPetPageState extends State<YourPetPage> {
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-                return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 80,),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Colors.white),
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: 40,),
-                                    Text("Your Pet", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),),
-                                    SizedBox(height: 20,),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(userData['petName'], style: TextStyle(fontSize: 20),),
-                                        IconButton(onPressed: () => _showEditPetNameDialog(userData['petName']), icon: Icon(Icons.edit))
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "${userData['todayKm'].toStringAsFixed(2)} / ${userData['dailyGoalKm']} Km",
-                                          style: const TextStyle(fontSize: 20),
-                                        ),
-                                        IconButton(
-                                          onPressed: () => _showEditGoalDialog((userData['dailyGoalKm'] ?? 5.0).toDouble()),
-                                          icon: const Icon(Icons.settings, size: 20, color: Colors.grey),
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                          "${userData['todaySteps'] ?? 0} Step${userData['todaySteps'] == 1 ? '' : 's'}",
-                                          style: const TextStyle(fontSize: 15, color: Colors.grey),
-                                        ),
-                                    SizedBox(height: 80,),
-                                    SizedBox(
-                                      height: 250,
-                                      child: DogService().getDogGIF((userData['isGoalReachedToday'] ?? false)),
-                                    ),
-                                    SizedBox(height: 80,),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: 50,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pushReplacementNamed(context, '/workout');
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.amber,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                        ),
-                                        child: Text("Workout", style: const TextStyle(color: Colors.white, fontSize: 16)),
-                                      ),
-                                    ),
-                                    SizedBox(height: 20,),
-                                  ],
-                                ),
-                              )
-                            ),
-                            Positioned(
-                              top: 20,
-                              left: 40,
-                              child: InkWell(
-                                onTap: () => Navigator.pushReplacementNamed(context, '/home'),
-                                child: Row(
-                                  children: const [
-                                    Icon(Icons.arrow_back_ios, size: 20, color: Colors.grey),
-                                    Text("Back", style: TextStyle(color: Colors.grey)),
-                                  ],
-                                ),
+                return Stack(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 40,),
+                          Text("Your Pet", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),),
+                          SizedBox(height: 20,),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(userData['petName'], style: TextStyle(fontSize: 20),),
+                              IconButton(onPressed: () => _showEditPetNameDialog(userData['petName']), icon: Icon(Icons.edit))
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "${userData['todayKm'].toStringAsFixed(2)} / ${userData['dailyGoalKm']} Km",
+                                style: const TextStyle(fontSize: 20),
                               ),
+                              IconButton(
+                                onPressed: () => _showEditGoalDialog((userData['dailyGoalKm'] ?? 5.0).toDouble()),
+                                icon: const Icon(Icons.settings, size: 20, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                          Text(
+                                "${userData['todaySteps'] ?? 0} Step${userData['todaySteps'] == 1 ? '' : 's'}",
+                                style: const TextStyle(fontSize: 15, color: Colors.grey),
+                              ),
+                          Spacer(flex: 1,),
+                          Flexible(
+                            flex: 5,
+                            child: SizedBox(
+                              height: 250,
+                              child: DogService().getDogGIF((userData['isGoalReachedToday'] ?? false)),
                             ),
+                          ),
+                          Spacer(flex: 1,),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushReplacementNamed(context, '/workout');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              ),
+                              child: Text("Workout", style: const TextStyle(color: Colors.white, fontSize: 16)),
+                            ),
+                          ),
+                          SizedBox(height: 20,),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      top: 120,
+                      left: 40,
+                      child: InkWell(
+                        onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.arrow_back_ios, size: 20, color: Colors.grey),
+                            Text("Back", style: TextStyle(color: Colors.grey)),
                           ],
-                        )
-                      )
-                    ]
-                  );
+                        ),
+                      ),
+                    ),
+                  ],
+                );
               },
             )
           ],

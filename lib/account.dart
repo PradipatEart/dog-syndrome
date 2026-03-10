@@ -139,14 +139,7 @@ class _AccountPageState extends State<AccountPage> {
                     }
                     var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-                    return Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 70,),
-                          userProfile(userData['photoURL'], userData['displayName'], userData['email']),
-                          
-                        ]
-                      );
+                    return userProfile(userData['photoURL'], userData['displayName'], userData['email']);
                   },
                 ),
                 
@@ -167,7 +160,7 @@ class _AccountPageState extends State<AccountPage> {
 
   Widget userProfile(String photoURL, String displayName, String? email){
     return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 20),
+    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 70),
     padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(25),

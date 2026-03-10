@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dog_syndrome/services/dog_service.dart';
+import 'package:dog_syndrome/services/notification_service.dart';
 import 'package:dog_syndrome/services/pedometer_service.dart';
 import 'package:dog_syndrome/services/user_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,6 +35,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
   int _seconds = 0;
   bool _isPaused = true;
   bool _isSaving = false;
+  bool _hasNotifiedGoal = false;
+  double _dailyGoal = 0.0;
 
   @override
   void initState() {
@@ -53,6 +56,12 @@ class _WorkoutPageState extends State<WorkoutPage> {
           setState(() {
             _steps = data['steps'];
             _distanceFromSteps = data['distanceKm'];
+
+            double currentTotal = (_initialTodayKm ?? 0.0) + _distanceFromSteps;
+            if (_dailyGoal > 0 && currentTotal >= _dailyGoal && !_hasNotifiedGoal) {
+              _hasNotifiedGoal = true;
+              _sendGoalNotification();
+            }
           });
         }
       });
@@ -64,6 +73,13 @@ class _WorkoutPageState extends State<WorkoutPage> {
         });
       });
     }
+  }
+
+  void _sendGoalNotification() async {
+    await NotificationService().showInstantNotification(
+      "Goal Reached!",
+      "Congratulations! You've completed your ${_dailyGoal.toStringAsFixed(1)} km daily walk.",
+    );
   }
 
   void _startTimer() {
@@ -206,151 +222,151 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
                 _initialTodayKm ??= (userData['todayKm'] ?? 0.0).toDouble();
                 double goalKm = (userData['dailyGoalKm'] ?? 1.0).toDouble();
+                _dailyGoal = goalKm;
 
                 double totalDist = _initialTodayKm! + _distanceFromSteps; 
                 double progress = totalDist / goalKm;
 
                 if (progress > 1.0) progress = 1.0;
 
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                return Stack(
                   children: [
-                    const SizedBox(height: 80),
-                    Expanded(
-                      child: Stack(
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                      ),
+                      child: Column(
                         children: [
-                          Container(
-                            margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Colors.white,
-                            ),
-                            child: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 40),
-                                  const Text(
-                                    "Workout",
-                                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 30),
-                                  
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text("Time", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-                                      Text(_formatTime(_seconds), style: const TextStyle(fontSize: 25))
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text("Distance", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-                                      Text("${totalDist.toStringAsFixed(2)} / ${userData['dailyGoalKm'] ?? 0} Km", 
-                                           style: const TextStyle(fontSize: 25)),
-                                    ],
-                                  ),
-                                  
-                                  SizedBox(height: 40,),
-                                  SizedBox(
-                                    height: 250,
-                                    child: _buildDogGIF(),
-                                  ),
-                                  SizedBox(height: 10,),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: LinearProgressIndicator(
-                                          value: progress,
-                                          minHeight: 15,
-                                          backgroundColor: Colors.grey[200],
-                                          color: Colors.lightGreenAccent,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        "${(progress * 100).toInt()}% of Daily Goal",
-                                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 20,),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _isPaused = !_isPaused;
-                                            });
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: _isPaused ? Colors.green : Colors.orangeAccent, // เปลี่ยนสีตามสถานะ
-                                            padding: const EdgeInsets.symmetric(vertical: 15),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                          ),
-                                          child: Text(
-                                            _isPaused ? "Start" : "Pause",
-                                            style: const TextStyle(color: Colors.white, fontSize: 18),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 15),
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          onPressed: _isSaving ? null : () => _finishWorkout(userData),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.black,
-                                            padding: const EdgeInsets.symmetric(vertical: 15),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                          ),
-                                          child: _isSaving 
-                                            ? const SizedBox(
-                                                height: 20,
-                                                width: 20,
-                                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                              )
-                                            : const Text("Finish", style: TextStyle(color: Colors.white, fontSize: 18)),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  if (kDebugMode)
-                                    FloatingActionButton(
-                                      backgroundColor: Colors.red, // สีแดงให้รู้ว่าปุ่มเทส
-                                      onPressed: () {
-                                        setState(() {
-                                          _steps += 200; 
-                                          _distanceFromSteps = _steps * 0.000762;
-                                        });
-                                      },
-                                      child: Icon(Icons.assist_walker),
-                                    )
-                                ],
-                              ),
-                            ),
+                          const SizedBox(height: 40),
+                          const Text(
+                            "Workout",
+                            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Time", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                              Text(_formatTime(_seconds), style: const TextStyle(fontSize: 25))
+                            ],
+                          ),
+                          Spacer(flex: 1,),
+                          
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Distance", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                              Text("${totalDist.toStringAsFixed(2)} / ${userData['dailyGoalKm'] ?? 0} Km", 
+                                    style: const TextStyle(fontSize: 25)),
+                            ],
                           ),
                           
-                          Positioned(
-                            top: 20,
-                            left: 40,
-                            child: InkWell(
-                              onTap: () => Navigator.pushReplacementNamed(context, '/yourpet'),
-                              child: Row(
-                                children: const [
-                                  Icon(Icons.arrow_back_ios, size: 20, color: Colors.grey),
-                                  Text("Back", style: TextStyle(color: Colors.grey)),
-                                ],
-                              ),
+                          Spacer(flex: 1,),
+                          Flexible(
+                            flex: 15,
+                            child: SizedBox(
+                              height: 250,
+                              child: _buildDogGIF(),
                             ),
                           ),
+                          Spacer(flex: 1,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 15,
+                                  backgroundColor: Colors.grey[200],
+                                  color: Colors.lightGreenAccent,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "${(progress * 100).toInt()}% of Daily Goal",
+                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                          Spacer(flex: 1,),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPaused = !_isPaused;
+                                    });
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _isPaused ? Colors.green : Colors.orangeAccent, // เปลี่ยนสีตามสถานะ
+                                    padding: const EdgeInsets.symmetric(vertical: 15),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                  ),
+                                  child: Text(
+                                    _isPaused ? "Start" : "Pause",
+                                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _isSaving ? null : () => _finishWorkout(userData),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(vertical: 15),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                  ),
+                                  child: _isSaving 
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                      )
+                                    : const Text("Finish", style: TextStyle(color: Colors.white, fontSize: 18)),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          if (kDebugMode)
+                            FloatingActionButton(
+                              backgroundColor: Colors.red,
+                              onPressed: () {
+                                setState(() {
+                                  _steps += 200; 
+                                  _distanceFromSteps = _steps * 0.000762;
+
+                                  double currentTotal = (_initialTodayKm ?? 0.0) + _distanceFromSteps;
+                                  if (currentTotal >= _dailyGoal && !_hasNotifiedGoal) {
+                                    _hasNotifiedGoal = true;
+                                    _sendGoalNotification();
+                                  }
+                                });
+                              },
+                              child: Icon(Icons.assist_walker),
+                            )
                         ],
+                      ),
+                    ),
+                    
+                    Positioned(
+                      top: 120,
+                      left: 40,
+                      child: InkWell(
+                        onTap: () => Navigator.pushReplacementNamed(context, '/yourpet'),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.arrow_back_ios, size: 20, color: Colors.grey),
+                            Text("Back", style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
                       ),
                     ),
                   ],
