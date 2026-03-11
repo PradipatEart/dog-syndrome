@@ -42,6 +42,7 @@ class MyApp extends StatelessWidget {
         '/streak' : (context) => StreakPage(),
         '/admin' : (context) => AdminPage()
       },
+      debugShowCheckedModeBanner: false,
 
       theme: ThemeData(
         textTheme: GoogleFonts.kanitTextTheme(),
