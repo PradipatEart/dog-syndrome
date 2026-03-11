@@ -306,7 +306,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                     });
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: _isPaused ? Colors.green : Colors.orangeAccent, // เปลี่ยนสีตามสถานะ
+                                    backgroundColor: _isPaused ? Colors.green : Colors.orangeAccent,
                                     padding: const EdgeInsets.symmetric(vertical: 15),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                                   ),
