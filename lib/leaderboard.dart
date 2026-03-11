@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 UserFirestoreService userFirestoreService = UserFirestoreService();
 
 class LeaderboardPage extends StatefulWidget {
-  const LeaderboardPage({Key? key}) : super(key: key);
+  const LeaderboardPage({super.key});
 
   @override
   State<LeaderboardPage> createState() => _LeaderboardPageState();
@@ -16,43 +16,26 @@ class UserModel {
   final String uid;
   final String displayName;
   final String? photoURL;
-  final DateTime? lastCheckIn;
   final int highestStreak;
   final int currentStreak;
-  final DateTime? updatedAt;
 
   UserModel({
     required this.uid,
     required this.displayName,
     this.photoURL,
-    this.lastCheckIn,
     this.highestStreak = 0,
     this.currentStreak = 0,
-    this.updatedAt,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
     return UserModel(
       uid: doc.id,
       displayName: data['displayName'] ?? 'Unknown',
       photoURL: data['photoURL'],
-      lastCheckIn: data['lastcheckIn'] != null ? (data['lastcheckIn'] as Timestamp).toDate() : null,
-      highestStreak: data['HighestStreak'] ?? 0,
+      highestStreak: data['highestStreak'] ?? 0,
       currentStreak: data['currentStreak'] ?? 0,
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
     );
-  }
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      'displayName': displayName,
-      'photoURL': photoURL,
-      'lastcheckIn': lastCheckIn,
-      'HighestStreak': highestStreak,
-      'currentStreak': currentStreak,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
   }
 }
 
@@ -72,19 +55,18 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
   Future<void> _fetchAllUsers() async {
     try {
-      
-      final snapshot = await FirebaseFirestore.instance.collection('users').get();
-      
+      final snapshot = await FirebaseFirestore.instance
+          .collection('user')
+          .where('role', isEqualTo: 'User')
+          .get();
       
       List<UserModel> usersList = snapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
           .toList();
 
-      
       usersList.sort((a, b) => b.currentStreak.compareTo(a.currentStreak));
 
-      
-      int rank = 99;
+      int rank = 0;
       UserModel? me;
       for (int i = 0; i < usersList.length; i++) {
         if (usersList[i].uid == currentUserId) {
@@ -94,42 +76,47 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         }
       }
 
-      
-      setState(() {
-        allUsers = usersList;
-        myRealRank = rank;
-        myData = me;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          allUsers = usersList;
+          myRealRank = rank;
+          myData = me;
+          isLoading = false;
+        });
+      }
 
     } catch (e) {
-      print("Error fetching users: $e");
-      setState(() {
-        isLoading = false;
-      });
+      debugPrint("Error fetching users: $e");
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFD98A33),
-    
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          
-          Positioned(
-            top: 0, left: 0, right: 0, height: 280,
-            child: Image.network(
-              'https://picsum.photos/seed/park/800/400',
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/background_fade.png',
               fit: BoxFit.cover,
             ),
           ),
           
-          
           const Positioned(
-            top: 80, left: 0, right: 0,
+            top: 100, left: 0, right: 0,
             child: Center(
               child: Text(
                 'Leaderboard',
@@ -140,28 +127,26 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
               ),
             ),
           ),
-
           
           Positioned(
-            top: 160, left: 20, right: 20, bottom: 20,
+            top: 170, left: 20, right: 20, bottom: 20,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 8))],
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 8))
+                ],
               ),
               child: isLoading 
-                
                 ? const Center(child: CircularProgressIndicator()) 
                 : Column(
                     children: [
-                      
                       Expanded(
                         child: allUsers.isEmpty 
                           ? const Center(child: Text('ยังไม่มีข้อมูลจัดอันดับ'))
                           : ListView.builder(
                               padding: const EdgeInsets.all(20),
-                              
                               itemCount: allUsers.length > 10 ? 10 : allUsers.length,
                               itemBuilder: (context, index) {
                                 UserModel user = allUsers[index];
@@ -176,27 +161,24 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                             ),
                       ),
 
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Divider(height: 1, color: Colors.grey),
-                      ),
-
-                      
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFAFAFA),
-                          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                      if (myData != null && myRealRank > 10) ...[
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Divider(height: 1, color: Colors.grey),
                         ),
-                        
-                        child: myData == null 
-                          ? const SizedBox() 
-                          : _buildLeaderboardRow(
-                              rank: myRealRank,
-                              user: myData!,
-                              isMe: true,
-                            ),
-                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFAFAFA),
+                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                          ),
+                          child: _buildLeaderboardRow(
+                            rank: myRealRank,
+                            user: myData!,
+                            isMe: true,
+                          ),
+                        ),
+                      ]
                     ],
                   ),
             ),
@@ -205,8 +187,8 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       ),
     );
   }
+
   Widget _buildLeaderboardRow({required int rank, required UserModel user, bool isMe = false}) {
-    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
@@ -224,8 +206,12 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           ),
           CircleAvatar(
             backgroundColor: isMe ? const Color(0xFFD1C4E9) : const Color(0xFFEBE2FC),
-            backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
-            child: user.photoURL == null ? Icon(Icons.person, color: isMe ? Colors.deepPurple : const Color(0xFF8B5CF6)) : null,
+            backgroundImage: user.photoURL != null && user.photoURL!.isNotEmpty 
+                ? NetworkImage(user.photoURL!) 
+                : null,
+            child: (user.photoURL == null || user.photoURL!.isEmpty) 
+                ? Icon(Icons.person, color: isMe ? Colors.deepPurple : const Color(0xFF8B5CF6)) 
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -252,7 +238,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     if (rank == 1) return '1st';
     if (rank == 2) return '2nd';
     if (rank == 3) return '3rd';
-    if (rank > 99) return '99+';
-    return '${rank}th';
+    if (rank <= 10) return '${rank}th';
+    return '-';
   }
 }

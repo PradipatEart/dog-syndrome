@@ -3,8 +3,9 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 class UserFirestoreService {
-
-  final CollectionReference user = FirebaseFirestore.instance.collection('user');
+  final CollectionReference user = FirebaseFirestore.instance.collection(
+    'user',
+  );
 
   Stream<QuerySnapshot> getAllUserStream() {
     return user
@@ -26,7 +27,12 @@ class UserFirestoreService {
     return user.doc(uid).snapshots();
   }
 
-  Future<void> addUser(String uid, String email, String displayName, String photoURL) {
+  Future<void> addUser(
+    String uid,
+    String email,
+    String displayName,
+    String photoURL,
+  ) {
     return user.doc(uid).set({
       'email': email,
       'role': 'User',
@@ -37,11 +43,13 @@ class UserFirestoreService {
       'highestStreak': 0,
       'dailyGoalKm': 5.0,
       'todayKm': 0.0,
-      'todaySteps' : 0,
+      'todaySteps': 0,
       'isGoalReachedToday': false,
       'reachedGoalAt': null,
       'lastDailyReset': DateFormat('yyyy-MM-dd').format(DateTime.now()),
       'updatedAt': FieldValue.serverTimestamp(),
+      'petName': 'My Pet',
+      'petType': 'dog',
     });
   }
 
@@ -52,10 +60,14 @@ class UserFirestoreService {
     });
   }
 
-  Future<void> updateProfile(String uid, String newDisplayName, String newPhotoURL) {
+  Future<void> updateProfile(
+    String uid,
+    String newDisplayName,
+    String newPhotoURL,
+  ) {
     return user.doc(uid).update({
       'displayName': newDisplayName,
-      'photoURL' : newPhotoURL,
+      'photoURL': newPhotoURL,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -69,7 +81,7 @@ class UserFirestoreService {
 
   Future<void> updatePhoto(String uid, String newPhotoURL) {
     return user.doc(uid).update({
-      'photoURL' : newPhotoURL,
+      'photoURL': newPhotoURL,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -78,7 +90,7 @@ class UserFirestoreService {
     return user.doc(uid).update({
       'petName': newPetName,
       'updatedAt': FieldValue.serverTimestamp(),
-    });  
+    });
   }
 
   Future<void> deleteUser(String uid) async {
@@ -90,8 +102,8 @@ class UserFirestoreService {
   }
 
   Future<void> saveWorkoutData({
-    required String uid, 
-    required int steps, 
+    required String uid,
+    required int steps,
     required double totalDist,
     required int streak,
     required int highest,
@@ -109,7 +121,7 @@ class UserFirestoreService {
 
     if (isFirstTimeReached) {
       updateData['isGoalReachedToday'] = true;
-      updateData['reachedGoalAt'] = FieldValue.serverTimestamp(); 
+      updateData['reachedGoalAt'] = FieldValue.serverTimestamp();
     }
 
     Map<String, dynamic> dailyStatData = {
@@ -124,8 +136,10 @@ class UserFirestoreService {
 
     DocumentReference userRef = user.doc(uid);
     batch.update(userRef, updateData);
-    
-    DocumentReference dailyStatRef = userRef.collection('dailyStats').doc(todayStr);
+
+    DocumentReference dailyStatRef = userRef
+        .collection('dailyStats')
+        .doc(todayStr);
     batch.set(dailyStatRef, dailyStatData, SetOptions(merge: true));
 
     await batch.commit();
@@ -143,7 +157,10 @@ class UserFirestoreService {
     });
   }
 
-  Future<void> checkAndResetDailyData(String uid, Map<String, dynamic> userData) async {
+  Future<void> checkAndResetDailyData(
+    String uid,
+    Map<String, dynamic> userData,
+  ) async {
     String todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     String lastResetStr = userData['lastDailyReset'] ?? "";
 
@@ -168,4 +185,10 @@ class UserFirestoreService {
     }
   }
 
+  Future<void> updatePetType(String uid, String newPetType) {
+    return user.doc(uid).update({
+      'petType': newPetType,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
 }

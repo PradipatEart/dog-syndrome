@@ -1,27 +1,26 @@
+import 'package:flutter/material.dart';
 import 'dart:math';
 
-import 'package:dog_syndrome/services/user_firestore.dart';
-import 'package:flutter/material.dart';
-
 class DogService {
+  Widget getDogGIF(bool isGoalReached, String petType) {
+    int randomPos = Random().nextInt(3) + 1; 
 
-  UserFirestoreService userFirestoreService = UserFirestoreService();
-
-  Widget getDogGIF(bool isGoalReached) {
     if (isGoalReached) {
-      int randomPos = Random().nextInt(4) + 1; 
-      return Image.asset('assets/gif/dog/dog_idle$randomPos.gif', fit: BoxFit.contain,);
-    } else {
+      if(petType == 'cat') return Image.asset('assets/gif/cat/cat_sleep.gif', fit: BoxFit.contain,);
       return Image.asset('assets/gif/dog/dog_sleep.gif', fit: BoxFit.contain,);
+    } else {
+      if (petType == 'cat') return Image.asset('assets/gif/cat/cat_idle$randomPos.gif', fit: BoxFit.contain,);
+      return Image.asset('assets/gif/dog/dog_idle$randomPos.gif', fit: BoxFit.contain,);
     }
   }
 
-  Widget getDogWorkoutGIF() {
+  Widget getDogWorkoutGIF(String petType) {
+    if (petType == 'cat') return Image.asset('assets/gif/cat/cat_workout.gif', fit: BoxFit.contain);
     return Image.asset('assets/gif/dog/dog_workout.gif', fit: BoxFit.contain);
   }
 
-  Widget getDogPauseGIF(int gifIndex) {
+  Widget getDogPauseGIF(int gifIndex, String petType) {
+    if (petType == 'cat') return Image.asset('assets/gif/cat/cat_pause$gifIndex.gif', fit: BoxFit.contain);
     return Image.asset('assets/gif/dog/dog_pause$gifIndex.gif', fit: BoxFit.contain);
   }
-
 }

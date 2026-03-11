@@ -58,6 +58,7 @@ class HomePage extends StatelessWidget {
                 if(userData['role'] == 'Admin'){
                   return AdminPage();
                 }
+                String currentPetType = userData['petType'] ?? 'dog';
 
                 return Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -67,7 +68,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 30,),
                       yourStreak(context,userData),
                       const SizedBox(height: 20,),
-                      yourPet(context, (userData['isGoalReachedToday'] ?? false)),
+                      yourPet(context, (userData['isGoalReachedToday'] ?? false), currentPetType),
                       const SizedBox(height: 20,),
                     ]
                   );
@@ -141,7 +142,7 @@ Widget yourStreak(BuildContext context, Map<String, dynamic> userData){
   );
 }
 
-Widget yourPet(BuildContext context, bool isGoalReached){
+Widget yourPet(BuildContext context, bool isGoalReached, String currentPetType){
   return GestureDetector(
     onTap: () {
       Navigator.pushReplacementNamed(context, '/yourpet');
@@ -161,7 +162,7 @@ Widget yourPet(BuildContext context, bool isGoalReached){
             const SizedBox(height: 30),
             SizedBox(
               height: 200,
-              child: DogService().getDogGIF(isGoalReached),
+              child: DogService().getDogGIF(isGoalReached, currentPetType),
             ),
           ],
         )

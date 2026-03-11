@@ -33,6 +33,107 @@ class _YourPetPageState extends State<YourPetPage> {
     }
   }
 
+  void _showChangePetDialog(String currentPetType) {
+    String _selectedType = currentPetType;
+    bool _isUpdating = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("Choose Your Buddy", textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () => setDialogState(() => _selectedType = 'dog'),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _selectedType == 'dog' ? Colors.amber.shade100 : Colors.transparent,
+                        border: Border.all(
+                          color: _selectedType == 'dog' ? Colors.amber : Colors.grey.shade300,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.pets_outlined), 
+                          const SizedBox(height: 5),
+                          const Text("Dog", style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  GestureDetector(
+                    onTap: () => setDialogState(() => _selectedType = 'cat'),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _selectedType == 'cat' ? Colors.amber.shade100 : Colors.transparent,
+                        border: Border.all(
+                          color: _selectedType == 'cat' ? Colors.amber : Colors.grey.shade300,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.pets_outlined), 
+                          const SizedBox(height: 5),
+                          const Text("Cat", style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isUpdating ? null : () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: (_isUpdating || _selectedType == currentPetType) 
+                ? null
+                : () async {
+                    setDialogState(() => _isUpdating = true);
+                    try {
+                      await userFirestoreService.updatePetType(uid!, _selectedType);
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Buddy updated successfully!"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      setDialogState(() => _isUpdating = false);
+                      debugPrint("Error updating pet type: $e");
+                    }
+                  },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+              child: _isUpdating
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text("Adopt", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showEditPetNameDialog(String currentName){
     TextEditingController _nameController = TextEditingController(text: currentName);
 
@@ -206,6 +307,7 @@ class _YourPetPageState extends State<YourPetPage> {
                 }
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
+                String currentPetType = userData['petType'] ?? 'dog';
 
                 return Stack(
                   children: [
@@ -226,6 +328,11 @@ class _YourPetPageState extends State<YourPetPage> {
                               Text(userData['petName'], style: TextStyle(fontSize: 20),),
                               IconButton(onPressed: () => _showEditPetNameDialog(userData['petName']), icon: Icon(Icons.edit))
                             ],
+                          ),
+                          TextButton.icon(
+                            onPressed: () => _showChangePetDialog(currentPetType),
+                            icon: const Icon(Icons.pets, size: 16, color: Colors.deepOrange),
+                            label: const Text("Change Buddy", style: TextStyle(color: Colors.deepOrange)),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -249,7 +356,10 @@ class _YourPetPageState extends State<YourPetPage> {
                             flex: 5,
                             child: SizedBox(
                               height: 250,
-                              child: DogService().getDogGIF((userData['isGoalReachedToday'] ?? false)),
+                              child: DogService().getDogGIF(
+                                (userData['isGoalReachedToday'] ?? false), 
+                                currentPetType
+                              ),
                             ),
                           ),
                           Spacer(flex: 1,),

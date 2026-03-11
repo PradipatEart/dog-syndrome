@@ -112,14 +112,14 @@ class _WorkoutPageState extends State<WorkoutPage> {
     super.dispose();
   }
 
-  Widget _buildDogGIF() {
+  Widget _buildDogGIF(String currentPetType) {
     if (_isPaused) {
-      return DogService().getDogPauseGIF(2);
+      return DogService().getDogPauseGIF(2, currentPetType);
     }
     if (_currentStatus == 'stopped') {
-      return DogService().getDogPauseGIF(1);
+      return DogService().getDogPauseGIF(1, currentPetType);
     }
-    return DogService().getDogWorkoutGIF();
+    return DogService().getDogWorkoutGIF(currentPetType);
   }
 
   Future<void> _finishWorkout(Map<String, dynamic> userData) async {
@@ -220,6 +220,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
                 var userData = snapshot.data!.data() as Map<String, dynamic>;
 
+                String petType = userData['petType'] ?? 'dog';
+
                 _initialTodayKm ??= (userData['todayKm'] ?? 0.0).toDouble();
                 double goalKm = (userData['dailyGoalKm'] ?? 1.0).toDouble();
                 _dailyGoal = goalKm;
@@ -270,7 +272,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                             flex: 15,
                             child: SizedBox(
                               height: 250,
-                              child: _buildDogGIF(),
+                              child: _buildDogGIF(petType),
                             ),
                           ),
                           Spacer(flex: 1,),
