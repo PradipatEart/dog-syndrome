@@ -182,8 +182,8 @@ class _SettingPageState extends State<SettingPage> {
     return ElevatedButton.icon(
       onPressed: () async {
         await NotificationService().showInstantNotification(
-          "Notification Test",
-          "Yes Finally it's working gu ja ba",
+          "Time to get active!",
+          "Don\'t forget to walk your pet today.",
         );
       },
       icon: const Icon(Icons.notifications_active, color: Colors.white),

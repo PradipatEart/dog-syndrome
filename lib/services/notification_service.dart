@@ -58,7 +58,7 @@ class NotificationService {
     await _notificationsPlugin.zonedSchedule(
       id: 1,
       title: 'Time to get active!',
-      body: 'Don\'t forget to walk your dog today.',
+      body: 'Don\'t forget to walk your pet today.',
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(

@@ -48,7 +48,6 @@ class UserFirestoreService {
       'reachedGoalAt': null,
       'lastDailyReset': DateFormat('yyyy-MM-dd').format(DateTime.now()),
       'updatedAt': FieldValue.serverTimestamp(),
-      'petName': 'My Pet',
       'petType': 'dog',
     });
   }

@@ -5,7 +5,7 @@ class DogService {
   Widget getDogGIF(bool isGoalReached, String petType) {
     int randomPos = Random().nextInt(3) + 1; 
 
-    if (isGoalReached) {
+    if (!isGoalReached) {
       if(petType == 'cat') return Image.asset('assets/gif/cat/cat_sleep.gif', fit: BoxFit.contain,);
       return Image.asset('assets/gif/dog/dog_sleep.gif', fit: BoxFit.contain,);
     } else {
